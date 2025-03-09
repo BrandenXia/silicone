@@ -1,11 +1,11 @@
 use std::sync::Arc;
-use std::thread;
 
 use anyhow::Result;
 
-use silicone::browser::browser_thread;
-use silicone::image::display_img;
-use silicone::state::State;
+use silicone::browser::BrowserThread;
+use silicone::spawn;
+use silicone::state::{State, StateProc};
+use silicone::ui::RenderThread;
 
 fn main() -> Result<()> {
     crossterm::execute!(
@@ -22,24 +22,13 @@ fn main() -> Result<()> {
         *ended = true;
     })?;
 
-    let browser_state = Arc::clone(&state);
-    thread::spawn(move || {
-        browser_thread(browser_state).unwrap();
-    });
+    let mut handles = vec![];
 
-    let (lock, cvar) = &state.started;
-    let mut started = lock.lock().unwrap();
-    while !*started {
-        started = cvar.wait(started).unwrap();
-    }
+    spawn!(BrowserThread, state, handles);
+    spawn!(RenderThread, state, handles);
 
-    while let Ok(data) = state.buf.read() {
-        display_img(data.as_slice())?;
-        thread::sleep(std::time::Duration::from_secs(1));
-
-        if *state.ended.lock().unwrap() {
-            break;
-        }
+    for handle in handles {
+        handle.join().unwrap()?;
     }
 
     crossterm::execute!(

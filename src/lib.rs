@@ -1,4 +1,8 @@
+mod image;
+mod macros;
+mod terminal;
+
 pub mod browser;
-pub mod image;
+pub mod input;
 pub mod state;
-pub mod terminal;
+pub mod ui;

@@ -3,15 +3,15 @@ use std::thread;
 
 use anyhow::Result;
 
-use crate::state::StateRef;
+use crate::state::{StateProc, StateRef};
 use crate::terminal::get_terminal_size;
 
-struct Browser {
-    browser: headless_chrome::Browser,
+pub(crate) struct Browser {
+    inner: headless_chrome::Browser,
 }
 
 impl Browser {
-    fn new() -> Result<Self> {
+    pub(crate) fn new() -> Result<Self> {
         let win_size = get_terminal_size()?;
 
         let options = headless_chrome::LaunchOptions::default_builder()
@@ -19,15 +19,15 @@ impl Browser {
             .build()?;
         let browser = headless_chrome::Browser::new(options)?;
 
-        Ok(Self { browser })
+        Ok(Self { inner: browser })
     }
 
     fn new_tab(&self) -> Result<Tab> {
-        Ok(Tab::new(self.browser.new_tab()?))
+        Ok(Tab::new(self.inner.new_tab()?))
     }
 
     fn tabs(&self) -> Vec<Tab> {
-        Tab::from_tabs(self.browser.get_tabs())
+        Tab::from_tabs(self.inner.get_tabs())
     }
 }
 
@@ -64,28 +64,32 @@ impl Tab {
     }
 }
 
-pub fn browser_thread(state: StateRef) -> Result<()> {
-    let browser = Browser::new()?;
-    let tab = browser.new_tab()?;
-    tab.navigate_to("https://google.com")?;
+pub struct BrowserThread;
 
-    if let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
-        *buf = data;
+impl StateProc for BrowserThread {
+    fn thread(state: StateRef) -> Result<()> {
+        let browser = &state.browser;
+        let tab = browser.new_tab()?;
+        tab.navigate_to("https://google.com")?;
 
-        let (lock, cvar) = &state.started;
-        let mut started = lock.lock().unwrap();
-        *started = true;
-        cvar.notify_one();
-    }
+        if let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
+            *buf = data;
 
-    while let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
-        *buf = data;
-        thread::sleep(std::time::Duration::from_secs(1));
-
-        if *state.ended.lock().unwrap() {
-            break;
+            let (lock, cvar) = &state.started;
+            let mut started = lock.lock().unwrap();
+            *started = true;
+            cvar.notify_one();
         }
-    }
 
-    Ok(())
+        while let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
+            *buf = data;
+            thread::sleep(std::time::Duration::from_secs(1));
+
+            if *state.ended.lock().unwrap() {
+                break;
+            }
+        }
+
+        Ok(())
+    }
 }

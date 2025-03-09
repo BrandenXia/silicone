@@ -8,7 +8,7 @@ const IMAGE_SEPARATE: u8 = b';';
 const IMAGE_CONTROL_SPLIT: &str = ",";
 
 fn serialize_gr_command(cmd: &Vec<(char, &str)>, payload: &[u8]) -> Vec<u8> {
-    let mut result = Vec::new();
+    let mut result = vec![];
     result.extend_from_slice(IMAGE_BEGIN);
 
     let cmd_str = cmd
