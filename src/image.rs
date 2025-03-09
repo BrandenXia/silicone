@@ -50,6 +50,6 @@ fn write_chunked(cmd: &mut Vec<(char, &str)>, data: &[u8]) -> io::Result<()> {
 }
 
 pub fn display_img(data: &[u8]) -> io::Result<()> {
-    let mut cmd = vec![('a', "T"), ('f', "100")];
+    let mut cmd = vec![('a', "T"), ('f', "100"), ('C', "1")];
     write_chunked(&mut cmd, data)
 }

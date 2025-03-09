@@ -7,7 +7,11 @@ use silicone::browser::Browser;
 use silicone::image::display_img;
 
 fn main() -> Result<()> {
-    crossterm::execute!(std::io::stdout(), crossterm::terminal::EnterAlternateScreen)?;
+    crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::EnterAlternateScreen,
+        crossterm::cursor::Hide
+    )?;
 
     let buf = Arc::new(RwLock::new(Vec::<u8>::new()));
     let started = Arc::new((Mutex::new(false), Condvar::new()));
@@ -61,8 +65,11 @@ fn main() -> Result<()> {
         }
     }
 
-    crossterm::execute!(std::io::stdout(), crossterm::terminal::LeaveAlternateScreen)?;
-    println!("Bye!");
+    crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::LeaveAlternateScreen,
+        crossterm::cursor::Show
+    )?;
 
     Ok(())
 }
