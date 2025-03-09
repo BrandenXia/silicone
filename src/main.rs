@@ -59,6 +59,7 @@ fn main() -> Result<()> {
 
     while let Ok(data) = buf.read() {
         display_img(data.as_slice())?;
+        thread::sleep(std::time::Duration::from_secs(1));
 
         if *ended.lock().unwrap() {
             break;
