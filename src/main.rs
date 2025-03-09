@@ -1,10 +1,11 @@
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::Arc;
 use std::thread;
 
 use anyhow::Result;
 
-use silicone::browser::Browser;
+use silicone::browser::browser_thread;
 use silicone::image::display_img;
+use silicone::state::State;
 
 fn main() -> Result<()> {
     crossterm::execute!(
@@ -13,55 +14,30 @@ fn main() -> Result<()> {
         crossterm::cursor::Hide
     )?;
 
-    let buf = Arc::new(RwLock::new(Vec::<u8>::new()));
-    let started = Arc::new((Mutex::new(false), Condvar::new()));
-    let ended = Arc::new(Mutex::new(false));
+    let state = State::new();
 
-    let writer_buf = Arc::clone(&buf);
-    let writer_started = Arc::clone(&started);
-    let writer_ended = Arc::clone(&ended);
-
-    let signal_ended = Arc::clone(&ended);
+    let signal_state = Arc::clone(&state);
     ctrlc::set_handler(move || {
-        let mut ended = signal_ended.lock().unwrap();
+        let mut ended = signal_state.ended.lock().unwrap();
         *ended = true;
     })?;
 
+    let browser_state = Arc::clone(&state);
     thread::spawn(move || {
-        let browser = Browser::new().unwrap();
-        let tab = browser.new_tab().unwrap();
-        tab.navigate_to("https://www.rust-lang.org").unwrap();
-
-        if let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), writer_buf.write()) {
-            *buf = data;
-
-            let (lock, cvar) = &*writer_started;
-            let mut started = lock.lock().unwrap();
-            *started = true;
-            cvar.notify_one();
-        }
-
-        while let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), writer_buf.write()) {
-            *buf = data;
-            thread::sleep(std::time::Duration::from_secs(1));
-
-            if *writer_ended.lock().unwrap() {
-                break;
-            }
-        }
+        browser_thread(browser_state).unwrap();
     });
 
-    let (lock, cvar) = &*started;
+    let (lock, cvar) = &state.started;
     let mut started = lock.lock().unwrap();
     while !*started {
         started = cvar.wait(started).unwrap();
     }
 
-    while let Ok(data) = buf.read() {
+    while let Ok(data) = state.buf.read() {
         display_img(data.as_slice())?;
         thread::sleep(std::time::Duration::from_secs(1));
 
-        if *ended.lock().unwrap() {
+        if *state.ended.lock().unwrap() {
             break;
         }
     }

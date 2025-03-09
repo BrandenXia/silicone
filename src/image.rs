@@ -29,6 +29,7 @@ fn serialize_gr_command(cmd: &Vec<(char, &str)>, payload: &[u8]) -> Vec<u8> {
 fn write_chunked(cmd: &mut Vec<(char, &str)>, data: &[u8]) -> io::Result<()> {
     let encoded_data = STANDARD.encode(data);
 
+    let mut stdout = io::stdout();
     let count = encoded_data.as_bytes().chunks(4096).count();
     encoded_data
         .as_bytes()
@@ -38,10 +39,8 @@ fn write_chunked(cmd: &mut Vec<(char, &str)>, data: &[u8]) -> io::Result<()> {
             let m = if i == count - 1 { "0" } else { "1" };
             cmd.push(('m', m));
 
-            io::stdout()
-                .write_all(&serialize_gr_command(cmd, chunk))
-                .unwrap();
-            io::stdout().flush().unwrap();
+            stdout.write_all(&serialize_gr_command(cmd, chunk)).unwrap();
+            stdout.flush().unwrap();
 
             cmd.pop();
         });
