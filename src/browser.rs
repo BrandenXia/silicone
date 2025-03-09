@@ -46,7 +46,7 @@ impl Tab {
     }
 
     pub fn navigate_to(&self, url: &str) -> Result<()> {
-        self.tab.navigate_to(url)?;
+        self.tab.navigate_to(url)?.wait_until_navigated()?;
         Ok(())
     }
 
