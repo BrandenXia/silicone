@@ -1,6 +1,5 @@
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
-use std::thread;
 
 use anyhow::Result;
 
