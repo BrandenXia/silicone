@@ -1,13 +1,6 @@
-[package]
-name = "silicone"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
 
-[dependencies]
-anyhow = "1.0.97"
-base64 = "0.22.1"
-crossterm = "0.28.1"
-ctrlc = "3.4.5"
-headless_chrome = {git = "https://github.com/rust-headless-chrome/rust-headless-chrome", features = ["fetch"]}
-libc = "0.2.170"
-
+members = [
+    "silicone", "silicone-macro",
+]

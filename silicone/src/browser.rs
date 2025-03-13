@@ -1,9 +1,10 @@
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 use anyhow::Result;
 
-use crate::state::{StateProc, StateRef};
+use crate::state::{Event, Handler, State};
 use crate::terminal::get_terminal_size;
 
 pub(crate) struct Browser {
@@ -64,30 +65,26 @@ impl Tab {
     }
 }
 
-pub struct BrowserThread;
+pub struct BrowserHandler;
 
-impl StateProc for BrowserThread {
-    fn thread(state: StateRef) -> Result<()> {
+impl Handler for BrowserHandler {
+    fn new() -> Self {
+        Self
+    }
+
+    fn deps(&self) -> &[Event] {
+        &[]
+    }
+
+    fn thread(&self, state: Arc<State>, tx: Sender<Event>) -> Result<()> {
         let browser = &state.browser;
         let tab = browser.new_tab()?;
         tab.navigate_to("https://google.com")?;
 
         if let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
             *buf = data;
-
-            let (lock, cvar) = &state.started;
-            let mut started = lock.lock().unwrap();
-            *started = true;
-            cvar.notify_one();
-        }
-
-        while let (Ok(data), Ok(mut buf)) = (tab.capture_screenshot(), state.buf.write()) {
-            *buf = data;
-            thread::sleep(std::time::Duration::from_secs(1));
-
-            if *state.ended.lock().unwrap() {
-                break;
-            }
+            tx.send(Event::RefreshScreen)
+                .expect("Failed to send image ready event");
         }
 
         Ok(())
