@@ -6,6 +6,7 @@ use crate::browser::Browser;
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumCount)]
 pub enum Event {
+    Start,
     End,
     RefreshScreen,
 }
@@ -36,6 +37,15 @@ pub trait Handler: Send + Sync {
     fn thread(&self, state: Arc<State>, tx: Sender<Event>) -> anyhow::Result<()>;
 }
 
+#[macro_export]
+macro_rules! handler_default_new {
+    () => {
+        fn new() -> Self {
+            Self
+        }
+    };
+}
+
 pub struct Handlers {
     _handlers: Vec<Arc<dyn Handler>>,
     handlers: [Vec<usize>; Event::COUNT],
@@ -51,9 +61,9 @@ impl Handlers {
 
     pub fn add_handler<H: Handler + 'static>(&mut self) {
         let h = H::new();
-        h.deps().iter().for_each(|e| {
-            self.handlers[*e as usize].push(self._handlers.len() - 1);
-        });
+        h.deps()
+            .iter()
+            .for_each(|e| self.handlers[*e as usize].push(self._handlers.len()));
         self._handlers.push(Arc::new(h));
     }
 

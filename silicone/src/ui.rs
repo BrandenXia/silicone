@@ -1,14 +1,13 @@
 use std::sync::{Arc, mpsc::Sender};
 
+use crate::handler_default_new;
 use crate::image::display_img;
 use crate::state::{Event, Handler, State};
 
 pub struct RenderHandler;
 
 impl Handler for RenderHandler {
-    fn new() -> Self {
-        Self
-    }
+    handler_default_new!();
 
     fn thread(&self, state: Arc<State>, _: Sender<Event>) -> anyhow::Result<()> {
         let browser = &state.browser;

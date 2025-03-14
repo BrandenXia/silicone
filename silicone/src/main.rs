@@ -18,19 +18,11 @@ fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel::<Event>();
 
     handlers.add_handler::<handlers::RenderHandler>();
+    handlers.add_handler::<handlers::InputHandler>();
 
-    // Initializing the first screen
-    {
-        let hs = handlers.get_handlers(Event::RefreshScreen);
-        for h in hs {
-            let sender = tx.clone();
-            let thread_state = Arc::clone(&state);
-            thread::spawn({
-                let handler = Arc::clone(h);
-                move || handler.thread(thread_state, sender)
-            });
-        }
-    }
+    tx.send(Event::Start).expect("Failed to send start event");
+    tx.send(Event::RefreshScreen)
+        .expect("Failed to send refresh event");
 
     while let Ok(msg) = rx.recv() {
         if msg == Event::End {
