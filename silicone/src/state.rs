@@ -1,24 +1,23 @@
-use std::sync::{Arc, RwLock, mpsc::Sender};
+use std::sync::{Arc, mpsc::Sender};
 
 use silicone_macro::EnumCount;
 
 use crate::browser::Browser;
 
-#[derive(Debug, Clone, Copy, EnumCount)]
+#[derive(Debug, Clone, Copy, PartialEq, EnumCount)]
 pub enum Event {
+    End,
     RefreshScreen,
 }
 
 pub struct State {
     pub(crate) browser: Browser,
-    pub(crate) buf: RwLock<Vec<u8>>,
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
             browser: Browser::new().expect("Fail to initialize browser"),
-            buf: RwLock::new(Vec::new()),
         }
     }
 }

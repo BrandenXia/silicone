@@ -18,9 +18,12 @@ fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel::<Event>();
 
     handlers.add_handler::<handlers::RenderHandler>();
-    handlers.add_handler::<handlers::BrowserHandler>();
 
     while let Ok(msg) = rx.recv() {
+        if msg == Event::End {
+            break;
+        }
+
         let hs = handlers.get_handlers(msg);
         if hs.is_empty() {
             continue;
