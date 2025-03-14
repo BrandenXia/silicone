@@ -19,6 +19,19 @@ fn main() -> Result<()> {
 
     handlers.add_handler::<handlers::RenderHandler>();
 
+    // Initializing the first screen
+    {
+        let hs = handlers.get_handlers(Event::RefreshScreen);
+        for h in hs {
+            let sender = tx.clone();
+            let thread_state = Arc::clone(&state);
+            thread::spawn({
+                let handler = Arc::clone(h);
+                move || handler.thread(thread_state, sender)
+            });
+        }
+    }
+
     while let Ok(msg) = rx.recv() {
         if msg == Event::End {
             break;
