@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     handlers.add_handler::<handlers::RenderHandler>();
     handlers.add_handler::<handlers::InputHandler>();
 
-    tx.send(Event::Start).expect("Failed to send start event");
+    // tx.send(Event::Start).expect("Failed to send start event");
     tx.send(Event::RefreshScreen)
         .expect("Failed to send refresh event");
 
@@ -30,9 +30,6 @@ fn main() -> Result<()> {
         }
 
         let hs = handlers.get_handlers(msg);
-        if hs.is_empty() {
-            continue;
-        }
         for h in hs {
             let sender = tx.clone();
             let thread_state = Arc::clone(&state);

@@ -1,11 +1,22 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use anyhow::Result;
+use crossterm::event::KeyEvent;
+use headless_chrome::Tab;
+use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
 
 use crate::terminal::get_terminal_size;
 
 pub(crate) struct Browser {
     inner: headless_chrome::Browser,
+    current_tab: Arc<Tab>,
+}
+
+fn key_event_to_key(k: KeyEvent) -> String {
+    match k.code {
+        crossterm::event::KeyCode::Char(c) => c.to_string(),
+        _ => String::new(),
+    }
 }
 
 impl Browser {
@@ -17,47 +28,26 @@ impl Browser {
             .build()?;
         let browser = headless_chrome::Browser::new(options)?;
 
-        Ok(Self { inner: browser })
-    }
+        let current_tab = browser.new_tab()?;
+        current_tab
+            .navigate_to("https://www.google.com")?
+            .wait_until_navigated()?;
 
-    pub(crate) fn new_tab(&self) -> Result<Tab> {
-        Ok(Tab::new(self.inner.new_tab()?))
-    }
-
-    pub(crate) fn tabs(&self) -> Vec<Tab> {
-        Tab::from_tabs(self.inner.get_tabs())
-    }
-}
-
-pub(crate) struct Tab {
-    tab: Arc<headless_chrome::Tab>,
-}
-
-impl Tab {
-    fn new(tab: Arc<headless_chrome::Tab>) -> Self {
-        Self { tab }
-    }
-
-    fn from_tabs(tabs: &Arc<Mutex<Vec<Arc<headless_chrome::Tab>>>>) -> Vec<Self> {
-        tabs.lock()
-            .unwrap()
-            .iter()
-            .map(|tab| Self::new(tab.clone()))
-            .collect()
-    }
-
-    pub(crate) fn navigate_to(&self, url: &str) -> Result<()> {
-        self.tab.navigate_to(url)?.wait_until_navigated()?;
-        Ok(())
+        Ok(Self {
+            inner: browser,
+            current_tab,
+        })
     }
 
     pub(crate) fn capture_screenshot(&self) -> Result<Vec<u8>> {
-        let data = self.tab.capture_screenshot(
-            headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption::Png,
-            None,
-            None,
-            true,
-        )?;
-        Ok(data)
+        self.current_tab
+            .capture_screenshot(CaptureScreenshotFormatOption::Png, None, None, true)
+    }
+
+    pub(crate) fn handle_key(&self, k: KeyEvent) -> Result<()> {
+        self.current_tab
+            .press_key_with_modifiers(key_event_to_key(k).as_str(), None)?;
+
+        Ok(())
     }
 }
