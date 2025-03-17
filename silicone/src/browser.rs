@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyEvent, KeyModifiers};
 use headless_chrome::Tab;
+use headless_chrome::browser::tab::ModifierKey;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
 
 use crate::terminal::get_terminal_size;
@@ -12,11 +13,27 @@ pub(crate) struct Browser {
     current_tab: Arc<Tab>,
 }
 
-fn key_event_to_key(k: KeyEvent) -> String {
+fn key_event_2_key(k: KeyEvent) -> String {
     match k.code {
         crossterm::event::KeyCode::Char(c) => c.to_string(),
         _ => String::new(),
     }
+}
+
+fn key_event_2_modifiers(k: KeyEvent) -> Vec<ModifierKey> {
+    let mut modifiers = Vec::new();
+
+    if k.modifiers.contains(KeyModifiers::CONTROL) {
+        modifiers.push(ModifierKey::Ctrl);
+    } else if k.modifiers.contains(KeyModifiers::SHIFT) {
+        modifiers.push(ModifierKey::Shift);
+    } else if k.modifiers.contains(KeyModifiers::ALT) {
+        modifiers.push(ModifierKey::Alt);
+    } else if k.modifiers.contains(KeyModifiers::META) {
+        modifiers.push(ModifierKey::Meta);
+    }
+
+    modifiers
 }
 
 impl Browser {
@@ -45,8 +62,15 @@ impl Browser {
     }
 
     pub(crate) fn handle_key(&self, k: KeyEvent) -> Result<()> {
-        self.current_tab
-            .press_key_with_modifiers(key_event_to_key(k).as_str(), None)?;
+        let modifiers = key_event_2_modifiers(k);
+        self.current_tab.press_key_with_modifiers(
+            key_event_2_key(k).as_str(),
+            if modifiers.is_empty() {
+                None
+            } else {
+                Some(modifiers.as_slice())
+            },
+        )?;
 
         Ok(())
     }

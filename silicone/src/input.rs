@@ -23,12 +23,24 @@ impl Handler for InputHandler {
         let browser = &state.browser;
         loop {
             match event::read()? {
-                Event::Key(k) => browser.handle_key(k)?,
+                Event::Key(k) => {
+                    if let event::KeyCode::Char(c) = k.code {
+                        if c == 'c' && k.modifiers == event::KeyModifiers::CONTROL {
+                            tx.send(state::Event::End)
+                                .expect("Failed to send end event");
+                            break;
+                        }
+
+                        browser.handle_key(k).expect("Failed to handle key event");
+                    }
+                }
                 _ => continue,
             }
 
             tx.send(state::Event::RefreshScreen)
                 .expect("Failed to send refresh event");
         }
+
+        Ok(())
     }
 }
