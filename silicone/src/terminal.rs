@@ -10,7 +10,7 @@ struct Buf {
     y_px: c_ushort,
 }
 
-type WinSize = (u32, u32);
+pub(crate) type WinSize = (u32, u32);
 
 pub fn get_terminal_size() -> io::Result<WinSize> {
     let mut buf = Buf {

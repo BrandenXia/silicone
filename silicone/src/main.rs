@@ -14,13 +14,13 @@ fn main() -> Result<()> {
     )?;
 
     let mut handlers = Handlers::new();
-    let state = Arc::new(State::new());
+    let state = Arc::new(State::new()?);
     let (tx, rx) = mpsc::channel::<Event>();
 
     handlers.add_handler::<handlers::RenderHandler>();
     handlers.add_handler::<handlers::InputHandler>();
 
-    // tx.send(Event::Start).expect("Failed to send start event");
+    tx.send(Event::Start).expect("Failed to send start event");
     tx.send(Event::RefreshScreen)
         .expect("Failed to send refresh event");
 

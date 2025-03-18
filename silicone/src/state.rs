@@ -1,5 +1,6 @@
 use std::sync::{Arc, mpsc::Sender};
 
+use anyhow::Result;
 use silicone_macro::EnumCount;
 
 use crate::browser::Browser;
@@ -16,16 +17,16 @@ pub struct State {
 }
 
 impl State {
-    pub fn new() -> Self {
-        Self {
-            browser: Browser::new().expect("Fail to initialize browser"),
-        }
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            browser: Browser::new()?,
+        })
     }
 }
 
 impl Default for State {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("Failed to create state")
     }
 }
 

@@ -16,6 +16,12 @@ pub(crate) struct Browser {
 fn key_event_2_key(k: KeyEvent) -> String {
     match k.code {
         crossterm::event::KeyCode::Char(c) => c.to_string(),
+        crossterm::event::KeyCode::Enter => "Enter".to_string(),
+        crossterm::event::KeyCode::Backspace => "Backspace".to_string(),
+        crossterm::event::KeyCode::Left => "ArrowLeft".to_string(),
+        crossterm::event::KeyCode::Right => "ArrowRight".to_string(),
+        crossterm::event::KeyCode::Up => "ArrowUp".to_string(),
+        crossterm::event::KeyCode::Down => "ArrowDown".to_string(),
         _ => String::new(),
     }
 }
