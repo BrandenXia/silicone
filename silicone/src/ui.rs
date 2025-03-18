@@ -13,7 +13,8 @@ impl Handler for RenderHandler {
         let browser = &state.browser;
 
         if let Ok(data) = browser.capture_screenshot() {
-            display_img(&data)?;
+            let size = state.size.read().unwrap();
+            display_img(&data, (size.0, size.1))?;
         }
 
         Ok(())

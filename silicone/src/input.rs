@@ -1,8 +1,8 @@
 use std::sync::{Arc, mpsc::Sender};
+use std::time::Duration;
 
 use crossterm::event;
-use crossterm::event::Event;
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, poll};
 
 use crate::handler_default_new;
 use crate::state;
@@ -23,18 +23,22 @@ impl Handler for InputHandler {
 
         let browser = &state.browser;
         loop {
-            match event::read()? {
-                Event::Key(k) => {
-                    if let event::KeyCode::Char(c) = k.code {
-                        if c == 'c' && k.modifiers == event::KeyModifiers::CONTROL {
-                            tx.send(state::Event::End)?;
-                            break;
+            if poll(Duration::from_millis(250))? {
+                match event::read()? {
+                    Event::Key(k) => {
+                        if let event::KeyCode::Char(c) = k.code {
+                            if c == 'c' && k.modifiers == event::KeyModifiers::CONTROL {
+                                tx.send(state::Event::End)?;
+                                break;
+                            }
                         }
+                        browser.handle_key(k)?;
                     }
-                    browser.handle_key(k)?;
-                }
 
-                _ => continue,
+                    Event::Resize(c, r) => *state.size.write().unwrap() = (c, r),
+
+                    _ => {}
+                }
             }
 
             tx.send(state::Event::RefreshScreen)?;

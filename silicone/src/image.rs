@@ -48,7 +48,16 @@ fn write_chunked(cmd: &mut Vec<(char, &str)>, data: &[u8]) -> io::Result<()> {
     Ok(())
 }
 
-pub fn display_img(data: &[u8]) -> io::Result<()> {
-    let mut cmd = vec![('a', "T"), ('f', "100"), ('C', "1")];
+pub fn display_img(data: &[u8], size: (u16, u16)) -> io::Result<()> {
+    let col = size.0.to_string();
+    let row = size.1.to_string();
+    let mut cmd = vec![
+        ('a', "T"),
+        ('f', "100"),
+        ('C', "1"),
+        ('q', "1"),
+        ('c', &col),
+        ('r', &row),
+    ];
     write_chunked(&mut cmd, data)
 }

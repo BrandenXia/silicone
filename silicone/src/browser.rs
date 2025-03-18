@@ -70,7 +70,7 @@ impl Browser {
     pub(crate) fn handle_key(&self, k: KeyEvent) -> Result<()> {
         let modifiers = key_event_2_modifiers(k);
         self.current_tab.press_key_with_modifiers(
-            key_event_2_key(k).as_str(),
+            &key_event_2_key(k),
             if modifiers.is_empty() {
                 None
             } else {

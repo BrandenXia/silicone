@@ -1,6 +1,7 @@
-use std::sync::{Arc, mpsc::Sender};
+use std::sync::{Arc, RwLock, mpsc::Sender};
 
 use anyhow::Result;
+use crossterm::terminal::window_size;
 use silicone_macro::EnumCount;
 
 use crate::browser::Browser;
@@ -14,12 +15,15 @@ pub enum Event {
 
 pub struct State {
     pub(crate) browser: Browser,
+    pub(crate) size: RwLock<(u16, u16)>,
 }
 
 impl State {
     pub fn new() -> Result<Self> {
+        let size = window_size()?;
         Ok(Self {
             browser: Browser::new()?,
+            size: RwLock::new((size.columns, size.rows)),
         })
     }
 }
