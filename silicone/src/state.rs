@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::terminal::window_size;
 use silicone_macro::EnumCount;
 
-use crate::browser::Browser;
+use crate::{browser::Browser, terminal::get_terminal_size};
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumCount)]
 pub enum Event {
@@ -15,7 +15,8 @@ pub enum Event {
 
 pub struct State {
     pub(crate) browser: Browser,
-    pub(crate) size: RwLock<(u16, u16)>,
+    pub(crate) cr_size: RwLock<(u16, u16)>,
+    pub(crate) term_size: (u32, u32),
 }
 
 impl State {
@@ -23,7 +24,8 @@ impl State {
         let size = window_size()?;
         Ok(Self {
             browser: Browser::new()?,
-            size: RwLock::new((size.columns, size.rows)),
+            cr_size: RwLock::new((size.columns, size.rows)),
+            term_size: get_terminal_size()?,
         })
     }
 }

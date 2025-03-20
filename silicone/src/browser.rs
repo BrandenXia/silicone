@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use crossterm::event::{KeyEvent, KeyModifiers, MouseEvent};
+use crossterm::event::{KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use headless_chrome::Tab;
 use headless_chrome::browser::tab::ModifierKey;
+use headless_chrome::browser::tab::point::Point;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
 
 use crate::terminal::get_terminal_size;
@@ -81,7 +82,26 @@ impl Browser {
         Ok(())
     }
 
-    pub(crate) fn handle_mouse(&self, m: MouseEvent) {
-        // TODO:
+    pub(crate) fn handle_mouse(
+        &self,
+        m: MouseEvent,
+        cr_size: (u16, u16),
+        term_size: (u32, u32),
+    ) -> Result<()> {
+        let x = m.column as f64 / cr_size.0 as f64 * term_size.0 as f64;
+        let y = m.row as f64 / cr_size.1 as f64 * term_size.1 as f64;
+        let p = Point { x, y };
+
+        match m.kind {
+            // MouseEventKind::Moved => {
+            //     self.current_tab.move_mouse_to_point(p)?;
+            // }
+            MouseEventKind::Up(_) => {
+                self.current_tab.click_point(p)?;
+            }
+            _ => {}
+        }
+
+        Ok(())
     }
 }
