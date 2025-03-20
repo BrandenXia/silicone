@@ -1,4 +1,5 @@
 use std::sync::{Arc, mpsc::Sender};
+use std::thread;
 use std::time::Duration;
 
 use crossterm::event;
@@ -21,9 +22,8 @@ impl Handler for InputHandler {
         crossterm::terminal::enable_raw_mode()?;
         crossterm::execute!(std::io::stdout(), EnableMouseCapture)?;
 
-        let browser = &state.browser;
         loop {
-            if poll(Duration::from_millis(250))? {
+            if poll(Duration::from_millis(1000))? {
                 match event::read()? {
                     Event::Key(k) => {
                         if let event::KeyCode::Char(c) = k.code {
@@ -32,7 +32,17 @@ impl Handler for InputHandler {
                                 break;
                             }
                         }
-                        browser.handle_key(k)?;
+                        thread::spawn({
+                            let s = Arc::clone(&state);
+                            move || s.browser.handle_key(k)
+                        });
+                    }
+
+                    Event::Mouse(m) => {
+                        thread::spawn({
+                            let s = Arc::clone(&state);
+                            move || s.browser.handle_mouse(m)
+                        });
                     }
 
                     Event::Resize(c, r) => *state.size.write().unwrap() = (c, r),

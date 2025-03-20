@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use crossterm::event::{KeyEvent, KeyModifiers};
+use crossterm::event::{KeyEvent, KeyModifiers, MouseEvent};
 use headless_chrome::Tab;
 use headless_chrome::browser::tab::ModifierKey;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
@@ -79,5 +79,9 @@ impl Browser {
         )?;
 
         Ok(())
+    }
+
+    pub(crate) fn handle_mouse(&self, m: MouseEvent) {
+        // TODO:
     }
 }
