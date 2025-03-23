@@ -42,10 +42,7 @@ impl Handler for InputHandler {
                         let size = state.cr_size.read().unwrap();
                         let size = (size.0, size.1);
                         let term_size = state.term_size;
-                        thread::spawn({
-                            let s = Arc::clone(&state);
-                            move || s.browser.handle_mouse(m, size, term_size)
-                        });
+                        state.browser.handle_mouse(m, size, term_size)?;
                     }
 
                     Event::Resize(c, r) => *state.cr_size.write().unwrap() = (c, r),
