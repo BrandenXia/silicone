@@ -1,3 +1,3 @@
-# Silicone - fricking-slow browser in terminal
+# Silicone - 🐌 Fricking-Slow Browser in Terminal
 
 Experimental browser in terminal using kitty graphic protocol.
