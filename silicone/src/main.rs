@@ -2,11 +2,22 @@ use std::sync::{Arc, mpsc};
 use std::thread;
 
 use anyhow::Result;
+use clap::Parser;
 
 use silicone::handlers;
 use silicone::state::{Event, Handlers, State};
 
+/// Browser in terminal based on kitty graphics protocol
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// url to open
+    url: String,
+}
+
 fn main() -> Result<()> {
+    let args = Args::parse();
+
     crossterm::execute!(
         std::io::stdout(),
         crossterm::terminal::EnterAlternateScreen,
@@ -14,7 +25,7 @@ fn main() -> Result<()> {
     )?;
 
     let mut handlers = Handlers::new();
-    let state = Arc::new(State::new()?);
+    let state = Arc::new(State::new(&args.url)?);
     let (tx, rx) = mpsc::channel::<Event>();
 
     handlers.add_handler::<handlers::RenderHandler>();

@@ -44,7 +44,7 @@ fn key_event_2_modifiers(k: KeyEvent) -> Vec<ModifierKey> {
 }
 
 impl Browser {
-    pub(crate) fn new() -> Result<Self> {
+    pub(crate) fn new(initial_url: &str) -> Result<Self> {
         let win_size = get_terminal_size()?;
 
         let options = headless_chrome::LaunchOptions::default_builder()
@@ -54,7 +54,7 @@ impl Browser {
 
         let current_tab = browser.new_tab()?;
         current_tab
-            .navigate_to("https://www.google.com")?
+            .navigate_to(initial_url)?
             .wait_until_navigated()?;
 
         Ok(Self {

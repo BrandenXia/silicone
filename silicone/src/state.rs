@@ -20,10 +20,10 @@ pub struct State {
 }
 
 impl State {
-    pub fn new() -> Result<Self> {
+    pub fn new(initial_url: &str) -> Result<Self> {
         let size = window_size()?;
         Ok(Self {
-            browser: Browser::new()?,
+            browser: Browser::new(initial_url)?,
             cr_size: RwLock::new((size.columns, size.rows)),
             term_size: get_terminal_size()?,
         })
@@ -32,7 +32,7 @@ impl State {
 
 impl Default for State {
     fn default() -> Self {
-        Self::new().expect("Failed to create state")
+        Self::new("https://google.com").expect("Failed to create state")
     }
 }
 
